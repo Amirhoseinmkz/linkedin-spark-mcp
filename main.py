@@ -91,6 +91,7 @@ async def health_check():
         "mode": "24/7 Cloud Service",
         "connected_tools": len(TOOLS),
         "endpoints": {
+            "mcp": "/mcp",
             "sse": "/sse",
             "messages": "/messages",
             "tools": "/tools"
@@ -179,8 +180,9 @@ async def execute_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
             "content": [{"type": "text", "text": f"Unknown tool: {name}"}]
         }
 
+@app.get("/mcp")
 @app.get("/sse")
-async def sse_endpoint(request: Request):
+async def mcp_sse_endpoint(request: Request):
     async def event_generator():
         session_id = f"session_{os.urandom(8).hex()}"
         queue = asyncio.Queue()
@@ -217,6 +219,7 @@ async def sse_endpoint(request: Request):
         }
     )
 
+@app.post("/mcp")
 @app.post("/messages")
 async def handle_message(request: Request):
     session_id = request.query_params.get("session_id")
