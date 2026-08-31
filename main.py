@@ -186,7 +186,13 @@ async def sse_endpoint(request: Request):
         queue = asyncio.Queue()
         clients[session_id] = queue
 
-        yield f"event: endpoint\ndata: /messages?session_id={session_id}\n\n"
+        base = str(request.base_url).rstrip("/")
+        if "http://localhost" in base or "127.0.0.1" in base:
+            messages_url = f"{base}/messages?session_id={session_id}"
+        else:
+            messages_url = f"https://linkedin-spark-mcp.vercel.app/messages?session_id={session_id}"
+
+        yield f"event: endpoint\ndata: {messages_url}\n\n"
 
         try:
             while True:
@@ -206,7 +212,8 @@ async def sse_endpoint(request: Request):
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*",
         }
     )
 
