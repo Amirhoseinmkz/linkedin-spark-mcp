@@ -17,7 +17,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory session message queues for MCP SSE
 clients: Dict[str, asyncio.Queue] = {}
 
 TOOLS = [
@@ -81,6 +80,20 @@ TOOLS = [
     }
 ]
 
+@app.get("/.well-known/mcp.json")
+@app.get("/mcp.json")
+async def mcp_manifest():
+    return {
+        "name": "linkedin-spark-mcp",
+        "version": "1.0.0",
+        "description": "LinkedIn 24/7 Agent MCP Server for Gemini Spark",
+        "transport": {
+            "type": "sse",
+            "url": "https://linkedin-spark-mcp.vercel.app/mcp"
+        },
+        "tools": TOOLS
+    }
+
 @app.get("/")
 @app.get("/health")
 async def health_check():
@@ -90,6 +103,7 @@ async def health_check():
         "version": "1.0.0",
         "mode": "24/7 Cloud Service",
         "connected_tools": len(TOOLS),
+        "manifest": "/.well-known/mcp.json",
         "endpoints": {
             "mcp": "/mcp",
             "sse": "/sse",
@@ -216,6 +230,8 @@ async def mcp_sse_endpoint(request: Request):
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
             "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
         }
     )
 
